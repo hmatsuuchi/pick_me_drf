@@ -1,3 +1,5 @@
-from django.shortcuts import render
+from django.views.generic import TemplateView
 
-# Create your views here.
+# LOGIN
+class EventView(TemplateView):
+    template_name = "event/event-view/index.html"

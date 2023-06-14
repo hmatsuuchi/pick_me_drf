@@ -6,14 +6,12 @@
     <link rel="stylesheet" href="{% static 'authentication/session-login/style.scss' %}?ver=001">
   </head>
   <body>
+    
     <div id="login-container">
-      <form method="POST" action="/authentication/session-authenticate">
+      <form method="POST" action="/authentication/session-login">
         {% csrf_token %}
-        <label for="username">username</label>
-        <input id="username" type="text" name="username" required>
-        <label for="password">password</label>
-        <input id="password" type="password" name="password" required>
-        <input type="submit" value="login">
+        {{ form.as_p }}
+        <button type="submit" aria-label="login">login</button>
       </form>
 
       <!-- SERVER MESSAGES -->
@@ -24,8 +22,9 @@
         {% endfor %}
       </ul>
       {% endif %}
-
     </div>
+
 	<script src="{% static 'authentication/session-login/scripts.js' %}?ver=001"></script>
+
   </body>
 </html>
