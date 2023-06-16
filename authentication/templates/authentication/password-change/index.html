@@ -1,0 +1,30 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Pick Me - Login</title>
+    <link rel="stylesheet" href="{% static 'authentication/session-login/style.scss' %}?ver=001">
+  </head>
+  <body>
+    
+    <div id="login-container">
+      <form method="POST" action="/authentication/password-change">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" aria-label="login">login</button>
+      </form>
+
+      <!-- SERVER MESSAGES -->
+      {% if messages %}
+      <ul class="messages">
+        {% for message in messages %}
+        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+    </div>
+
+	<script src="{% static 'authentication/session-login/scripts.js' %}?ver=001"></script>
+
+  </body>
+</html>

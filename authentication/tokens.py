@@ -1,3 +1,4 @@
+from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 
 # ACCOUNT ACTIVATION TOKEN GENERATOR

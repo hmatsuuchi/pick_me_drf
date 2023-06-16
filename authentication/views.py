@@ -1,48 +1,22 @@
 from django.views.generic import TemplateView, FormView, View
 from django.contrib import messages
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import login, get_user_model
 from django.contrib.sites.shortcuts import get_current_site
 from django.shortcuts import render, redirect
 from django.template.loader import render_to_string
-from django.utils.http import urlsafe_base64_encode
-from django.utils.encoding import force_bytes
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
 # MODELS
 from django.contrib.auth.models import User, Group
 from user_profile.models import UserProfile
 # FORMS
-from .forms import SessionAuthenticationForm, CreateAccountForm, RecoverPasswordForm
+from .forms import CreateAccountForm
 # AUTOMATED EMAIL
 from django.core.mail import send_mail
 from django.conf import settings
 # TOKEN GENERATOR
 from .tokens import account_activation_token
-
-# ======= AUTHENTICATION =======
-
-# LOGIN
-class SessionLoginView(FormView):
-    template_name = "authentication/session-login/index.html"
-    form_class = SessionAuthenticationForm
-    success_url = "/"
-
-    def form_valid(self, form):
-        username_cleaned = form.cleaned_data['username']
-        password_cleaned = form.cleaned_data['password']
-
-        user = authenticate(username=username_cleaned, password=password_cleaned)
-        if user is not None:
-            login(self.request, user)
-            return super().form_valid(form)
-        else:
-            messages.error(self.request, 'invalid username or password')
-            return redirect("session_login_view")
-
-# LOGOUT
-class SessionLogoutView(View):
-    def get(self, request):
-        logout(request)
-        return render(request, "authentication/session-logout/index.html")
-    
+ 
 # ======= CREATE ACCOUNT =======
 
 # CREATE ACCOUNT
@@ -91,7 +65,6 @@ class CreateAccountView(FormView):
             # generates and sends account confirmation email
             send_mail(
                 subject='Verify your account',
-                # message='Click the link below to verify your account.',
                 from_email=settings.EMAIL_HOST_USER,
                 recipient_list=[new_user.email],
                 message = render_to_string('authentication/create-account/email_verification.html',
@@ -110,28 +83,32 @@ class CreateAccountView(FormView):
 class CreateAccountConfirmationView(TemplateView):
     template_name = "authentication/create-account-confirmation/index.html"
 
-# VERIFY ACCOUNT
-class CreateAccountVerifyView(TemplateView):
-    template_name = "authentication/create-account-verify/index.html"
-# ======= RECOVER PASSWORD =======
-
-# RECOVER PASSWORD
-# to prevent authentication information leaks, even unsuccessful account lookups will redirect to the same page
-class RecoverPasswordView(FormView):
-    template_name = "authentication/recover-password/index.html"
-    form_class = RecoverPasswordForm
-    success_url = "/authentication/recover-password-confirmation"
-
-    def form_valid(self, form):
-        email_cleaned = form.cleaned_data['email']
-
+# VERIFY ACCOUNT 
+class CreateAccountVerifyView(View):
+    def get_user_from_email_verification_token(self, uidb64, token):
+        # attempts to derive user id from encoded link and perform user lookup
         try:
-            user = User.objects.get(email=email_cleaned)
-        except:
-            user = None
-            
-        return redirect("recover_password_confirmation_view")
+            uid = force_str(urlsafe_base64_decode(uidb64))
+            user = get_user_model().objects.get(pk=uid)
+        except (TypeError, ValueError, OverflowError, get_user_model().DoesNotExist):
+            return None
+        
+        if user is not None and account_activation_token.check_token(user, token):
+            return user
+        return None
     
-# RECOVER PASSWORD CONFIRMATION
-class RecoverPasswordConfirmationView(TemplateView):
-    template_name = "authentication/recover-password-confirmation/index.html"
+    def get(self, request, uidb64, token):
+        user = self.get_user_from_email_verification_token(uidb64, token) # validates token and gets user
+        if user is not None:
+            user.is_active = True # sets active status to True
+            user.save()
+            login(request, user) # logs in user
+
+            context = {
+                'user': user,
+            }
+
+            return render(request, 'authentication/create-account-verify/index.html', context)
+        
+        else:
+            return render(request, 'authentication/create-account-verify-fail/index.html')
