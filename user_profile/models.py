@@ -7,3 +7,6 @@ class UserProfile(models.Model):
     organization_logo = models.ImageField(blank=True, null=True)
     organization_phone = models.CharField(max_length=32, blank=True, null=True)
     organization_email = models.CharField(max_length=256, blank=True, null=True)
+
+    def __str__(self):
+        return str(self.user)

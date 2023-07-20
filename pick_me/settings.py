@@ -1,3 +1,4 @@
+from datetime import timedelta
 from pathlib import Path
 # import environmental variables
 import environ
@@ -19,27 +20,62 @@ SECRET_KEY = env('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    'localhost',
+    'localhost:3000',
+    'localhost:8000',
+    '127.0.0.1',
+]
 
+# cors policy settings
+CORS_ALLOW_ALL_ORIGINS = True
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://localhost",
+]
+
+CORS_ALLOW_METHODS = (
+    "DELETE",
+    "GET",
+    "OPTIONS",
+    "PATCH",
+    "POST",
+    "PUT",
+)
 
 # Application definition
-
 INSTALLED_APPS = [
     'user_profile', # USER PROFILE
     'event', # EVENT
     'attendee', # ATTENDEE
     'authentication', # AUTHENTICATION
-    'main_spa', # MAIN SPA
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'rest_framework',
+    'rest_framework', # DJANGO REST FRAMEWORK
+    'corsheaders', # CORS HEADERS
+    'rest_framework_simplejwt.token_blacklist', # DJANGO JWT TOKEN BLACKLIST
 ]
 
+REST_FRAMEWORK = {
+     'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+      ],
+}
+
+SIMPLE_JWT = {
+     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=10),
+     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+     'ROTATE_REFRESH_TOKENS': True,
+     'BLACKLIST_AFTER_ROTATION': True
+}
+
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware', # CORS HEADER MIDDLEWARE
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',

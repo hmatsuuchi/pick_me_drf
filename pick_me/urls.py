@@ -2,14 +2,13 @@ from django.contrib import admin
 from django.urls import path, include
 # URLS
 import authentication.urls as AuthenticationUrls
-import main_spa.urls as MainSpaUrls
+import user_profile.urls as UserProfileUrls
 
 urlpatterns = [
     # ADMIN
     path('admin/', admin.site.urls),
-    # AUTHENTICATION
+    # API - AUTHENTICATION
     path('authentication/', include(AuthenticationUrls)),
-    # MAIN SPA
-    # this is a temporary routing; acutal routing to react files done by NGINX on deployment
-    path('', include(MainSpaUrls)),
+    # API - USER PROFILE
+    path('user_profile/', include(UserProfileUrls)),
 ]
